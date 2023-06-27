@@ -1,5 +1,22 @@
 # mame2010
 
+Namco System 12 dedicated version of MAME 0.139 for libretro, forked from https://github.com/libretro/mame2010-libretro
+
+It aimed to make Tekken Tag Tournament playable on Miyoo Mini Plus (ARM Cortex-A7).
+ 
+Currently, 16 fps is achived by reducing rendering resolution(512x240 to 256x240).
+
+#### Build instruction
+```bash
+wget https://github.com/steward-fu/archives/releases/download/miyoo-mini-plus/gcc-arm-8.2-2018.08-x86_64-arm-linux-gnueabihf.tar.gz
+tar -xzvf gcc-arm-8.2-2018.08-x86_64-arm-linux-gnueabihf.tar.gz --transform 's/gcc-arm-8.2-2018.08-x86_64-arm-linux-gnueabihf/mmiyoo/'
+sudo mv mmiyoo /opt
+
+make -j platform=miyoo_mini
+```
+
+---
+
 Port of MAME 0.139 for libretro, originally sourced from https://github.com/mamedev/mame/releases/download/mame0139/mame0139s.zip
 
 The OSD code is highly inspired by other MAME ports :

@@ -403,6 +403,37 @@ else ifeq ($(platform), classic_armv7_a7)
 	    LDFLAGS += -static-libgcc -static-libstdc++
 	  endif
 	endif
+# Miyoo Mini(Plus)
+else ifeq ($(platform), miyoo_mini)
+	NAMCOS12_ONLY := 1
+	BUILD_ZLIB = 1
+	CC = /opt/mmiyoo/bin/arm-linux-gnueabihf-gcc
+	CXX = /opt/mmiyoo/bin/arm-linux-gnueabihf-g++
+	AR = /opt/mmiyoo/bin/arm-linux-gnueabihf-ar
+	LD = /opt/mmiyoo/bin/arm-linux-gnueabihf-ld
+	TARGETLIB := mame0139_libretro.so
+	fpic = -fPIC
+	CFLAGS += -Ofast \
+	-flto=4 -fwhole-program -fuse-linker-plugin \
+	-fdata-sections -ffunction-sections -Wl,--gc-sections \
+	-fno-stack-protector -fno-ident -fomit-frame-pointer \
+	-falign-functions=1 -falign-jumps=1 -falign-loops=1 \
+	-fno-unwind-tables -fno-asynchronous-unwind-tables -fno-unroll-loops \
+	-fmerge-all-constants -fno-math-errno \
+	-marm -mtune=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=hard
+	CFLAGS += -fomit-frame-pointer -ffast-math -fsigned-char
+	LDFLAGS += -shared -Wl,--no-undefined -s -pthread -lpthread
+	X86_SH2DRC = 0
+	PTR64 = 0
+	ifeq ($(shell echo `$(CC) -dumpversion` "< 4.9" | bc -l), 1)
+	  CFLAGS += -march=armv7-a
+	else
+	  CFLAGS += -march=armv7ve
+	  # If gcc is 5.0 or later
+	  ifeq ($(shell echo `$(CC) -dumpversion` ">= 5" | bc -l), 1)
+	    LDFLAGS += -static-libgcc -static-libstdc++
+	  endif
+	endif
  # (armv8 a35, hard point, neon based) ### 
 # Playstation Classic 
 else ifeq ($(platform), classic_armv8_a35)
@@ -793,6 +824,8 @@ BUILDOUT = $(BUILDOBJ)
 
 ifeq ($(LITE),1)
 include Makefile.tiny
+else ifeq ($(NAMCOS12_ONLY),1)
+include Makefile.namcos12
 else
 include Makefile.common
 endif
