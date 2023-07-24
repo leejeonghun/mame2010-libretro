@@ -241,7 +241,7 @@ static int need_sianniv_vblank_hack;
 #define SINT11( x ) ( ( (INT32)( x ) << 21 ) >> 21 )
 
 #define ADJUST_COORD( a ) \
-	a.w.l = COORD_X( a ) + m_n_drawoffset_x; \
+	a.w.l = ( COORD_X( a ) >> 1 ) + m_n_drawoffset_x; \
 	a.w.h = COORD_Y( a ) + m_n_drawoffset_y;
 
 #define COORD_X( a ) ( (INT16)a.w.l )
@@ -607,10 +607,10 @@ static STATE_POSTLOAD( updatevisiblearea )
 		}
 		break;
 	case 2:
-		m_n_screenwidth = 512;
+		m_n_screenwidth = 512 >> 1;
 		break;
 	case 3:
-		m_n_screenwidth = 640;
+		m_n_screenwidth = 640 >> 1;
 		break;
 	}
 	visarea.min_x = visarea.min_y = 0;
@@ -874,6 +874,11 @@ VIDEO_UPDATE( psx )
 
 		n_left = ( ( (INT32)m_n_horiz_disstart - n_overscanleft ) * (INT32)m_n_screenwidth ) / 2560;
 		n_columns = ( ( ( (INT32)m_n_horiz_disend - m_n_horiz_disstart ) * (INT32)m_n_screenwidth ) / 2560 );
+
+		// NOTE: https://github.com/mamedev/mame/pull/7624
+		if (n_left > m_n_screenwidth - n_columns)
+			n_left = m_n_screenwidth - n_columns;
+
 		if( n_left < 0 )
 		{
 			n_x = -n_left;
@@ -1229,7 +1234,7 @@ INLINE int CullVertex( int a, int b )
 	n_v.d += n_dv;
 
 #define FLATTEXTUREDRECTANGLEUPDATE \
-	n_u += n_du;
+	n_u += (n_du << 1);
 
 #define TEXTURE_LOOP \
 	while( n_distance > 0 ) \
@@ -2858,10 +2863,10 @@ static void FlatTexturedRectangle( running_machine *machine )
 
 	while( n_h > 0 )
 	{
-		n_x = COORD_X( m_packet.FlatTexturedRectangle.n_coord ) + m_n_drawoffset_x;
+		n_x = ( COORD_X( m_packet.FlatTexturedRectangle.n_coord ) >> 1 ) + m_n_drawoffset_x;
 		n_u = TEXTURE_U( m_packet.FlatTexturedRectangle.n_texture );
 
-		n_distance = SIZE_W( m_packet.FlatTexturedRectangle.n_size );
+		n_distance = SIZE_W( m_packet.FlatTexturedRectangle.n_size ) >> 1;
 		if( n_distance > 0 && n_y >= (INT32)m_n_drawarea_y1 && n_y <= (INT32)m_n_drawarea_y2 )
 		{
 			if( ( (INT32)m_n_drawarea_x1 - n_x ) > 0 )
@@ -3586,6 +3591,7 @@ void psx_gpu_write( running_machine *machine, UINT32 *p_ram, INT32 n_size )
 			{
 				m_n_drawarea_y1 = ( m_packet.n_entry[ 0 ] >> 12 ) & 1023;
 			}
+			m_n_drawarea_x1 >>= 1;
 			verboselog( machine, 1, "%02x: drawing area top left %d,%d\n", m_packet.n_entry[ 0 ] >> 24,
 				m_n_drawarea_x1, m_n_drawarea_y1 );
 			break;
@@ -3599,6 +3605,7 @@ void psx_gpu_write( running_machine *machine, UINT32 *p_ram, INT32 n_size )
 			{
 				m_n_drawarea_y2 = ( m_packet.n_entry[ 0 ] >> 12 ) & 1023;
 			}
+			m_n_drawarea_x2 >>= 1;
 			verboselog( machine, 1, "%02x: drawing area bottom right %d,%d\n", m_packet.n_entry[ 0 ] >> 24,
 				m_n_drawarea_x2, m_n_drawarea_y2 );
 			break;
